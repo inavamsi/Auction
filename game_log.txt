@@ -1,0 +1,18 @@
+Player Sudo won t3 on this round 0 with bid amount 1.
+Remaining time:	Sudo has 119.999018 seconds remaining	Inav has 119.998486 seconds remainingRemaining wealth:	Sudo has 99 dollars remaining	Inav has 100 dollars remaining------------------------------------
+Player Sudo won t1 on this round 1 with bid amount 1.
+Remaining time:	Sudo has 119.99867300000001 seconds remaining	Inav has 119.998184 seconds remainingRemaining wealth:	Sudo has 98 dollars remaining	Inav has 100 dollars remaining------------------------------------
+Player Sudo won t0 on this round 2 with bid amount 1.
+Remaining time:	Sudo has 119.99827100000002 seconds remaining	Inav has 119.99775899999999 seconds remainingRemaining wealth:	Sudo has 97 dollars remaining	Inav has 100 dollars remaining------------------------------------
+Player Sudo won t2 on this round 3 with bid amount 1.
+Remaining time:	Sudo has 119.99797300000002 seconds remaining	Inav has 119.99752199999999 seconds remainingRemaining wealth:	Sudo has 96 dollars remaining	Inav has 100 dollars remaining------------------------------------
+Player Sudo won t1 on this round 4 with bid amount 1.
+Remaining time:	Sudo has 119.99767700000001 seconds remaining	Inav has 119.99728699999999 seconds remainingRemaining wealth:	Sudo has 95 dollars remaining	Inav has 100 dollars remaining------------------------------------
+Player Sudo won t3 on this round 5 with bid amount 1.
+Remaining time:	Sudo has 119.997386 seconds remaining	Inav has 119.99698799999999 seconds remainingRemaining wealth:	Sudo has 94 dollars remaining	Inav has 100 dollars remaining------------------------------------
+Player Sudo won t0 on this round 6 with bid amount 1.
+Remaining time:	Sudo has 119.99704000000001 seconds remaining	Inav has 119.99658099999999 seconds remainingRemaining wealth:	Sudo has 93 dollars remaining	Inav has 100 dollars remaining------------------------------------
+Player Sudo won t0 on this round 7 with bid amount 1.
+Remaining time:	Sudo has 119.99660700000001 seconds remaining	Inav has 119.99634699999999 seconds remainingRemaining wealth:	Sudo has 92 dollars remaining	Inav has 100 dollars remaining------------------------------------
+Game over
+Player Sudo won the game! Congrats!
