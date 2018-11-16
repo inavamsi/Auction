@@ -37,7 +37,7 @@ def get_active_players(wealth_table):
 
 
 ### TODO Put your bidding algorithm here
-def calculate_bid(game_state, wealth, wealth_table):
+def calculate_bid(game_state, wealth, wealth_table,state):
     '''
     'game_state': current game state
     'wealth': your current wealth
@@ -51,6 +51,12 @@ def calculate_bid(game_state, wealth, wealth_table):
 
     return 1
 
+def printstate(state):
+    print("Item being auctioned :",state["cur_item"])
+    print("Iterator : ",state["iterator"])
+
+    for i in state["p_portfolio"]:
+        print("     ",i," : ",state["p_portfolio"][i])
 
 if __name__ == '__main__':
 
@@ -67,13 +73,25 @@ if __name__ == '__main__':
     player_count = client.player_count
     wealth_table = client.wealth_table
 
+    my_tuple=(100,[])
+
+    p_items={}  #tuple of wealth,list of paintings
+    for i in wealth_table:
+        p_items[i]=(wealth_table[i],[])
+
+    state ={"name":name,"iterator":0,"cur_item":auction_items[0],"allitems":auction_items,"k":artists_num,"n":required_count,"p_portfolio":p_items,"my_portfolio":my_tuple}
+
     current_round = 0
     wealth = 100
     while True:
+        print("")
+        print("")
+        print("")
+        printstate(state)
         if current_round == 0:
-            bid_amt = calculate_bid(None, wealth, wealth_table)
+            bid_amt = calculate_bid(None, wealth, wealth_table,state)
         else:
-            bid_amt = calculate_bid(game_state, wealth, game_state['wealth_table'])
+            bid_amt = calculate_bid(game_state, wealth, game_state['wealth_table'],state)
         client.make_bid(auction_items[current_round], bid_amt)
 
         # after sending bid, wait for other player
@@ -83,4 +101,12 @@ if __name__ == '__main__':
             wealth -= game_state['winning_bid']
         check_game_status(game_state)
 
+        (p_w,p_l)=state["p_portfolio"][game_state['bid_winner']]
+        p_w=p_w-game_state['winning_bid']
+        p_l.append(state["allitems"][state["iterator"]])
+        state["p_portfolio"][game_state['bid_winner']]=(p_w,p_l)
+        state["curitem"]=state["allitems"][state["iterator"]]
+        if name==game_state['bid_winner']:
+            state["my_portfolio"]=(p_w,p_l)
+        state["iterator"]+=1
         current_round += 1
