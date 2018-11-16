@@ -1,9 +1,8 @@
 import atexit
+import sys
 
 from client import Client
-import time
-import random
-import sys
+
 
 def check_game_status(state):
     if state['finished']:
@@ -26,6 +25,17 @@ game_state: 'finished': whether the game has finished
 -------------------------------------------------------------------
 You should return a whole number as the bid per turn.
 '''
+
+
+### Returns players who still have wealth left
+def get_active_players(wealth_table):
+    active_players = list(wealth_table.keys())
+    for key in active_players:
+        if wealth_table[key] == 0:
+            active_players.remove(key)
+    return active_players, active_players.__len__()
+
+
 ### TODO Put your bidding algorithm here
 def calculate_bid(game_state, wealth, wealth_table):
     '''
@@ -34,7 +44,11 @@ def calculate_bid(game_state, wealth, wealth_table):
     'wealth_table': dictionary of wealth of each player like {'player_name': wealth, ...}
                     *Notice that player_name is a string. Invalid player will have wealth of -1.*
     '''
-    
+
+    if game_state:
+        print("*********WEALTH TABLE********")
+        print(game_state['wealth_table'])
+
     return 1
 
 
