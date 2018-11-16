@@ -52,11 +52,36 @@ def calculate_bid(game_state, wealth, wealth_table,state):
     return 1
 
 def printstate(state):
+    print("")
+    print("")
+    print("")
     print("Item being auctioned :",state["cur_item"])
     print("Iterator : ",state["iterator"])
 
     for i in state["p_portfolio"]:
         print("     ",i," : ",state["p_portfolio"][i])
+
+def intialise_state(name,client):
+    my_tuple = (100, [])
+
+    p_items = {}  # tuple of wealth,list of paintings
+    for i in client.wealth_table:
+        p_items[i] = (client.wealth_table[i], [])
+
+    state = {"name": name, "iterator": 0, "cur_item": client.auction_items[0], "allitems": client.auction_items, "k": client.artists_num,
+             "n": client.required_count, "p_portfolio": p_items, "my_portfolio": my_tuple}
+    return state
+
+def update_state(game_state,state):
+    (p_w, p_l) = state["p_portfolio"][game_state['bid_winner']]
+    p_w = p_w - game_state['winning_bid']
+    p_l.append(state["allitems"][state["iterator"]])
+    state["p_portfolio"][game_state['bid_winner']] = (p_w, p_l)
+    state["curitem"] = state["allitems"][state["iterator"]]
+    if name == game_state['bid_winner']:
+        state["my_portfolio"] = (p_w, p_l)
+    state["iterator"] += 1
+    return state
 
 if __name__ == '__main__':
 
@@ -73,20 +98,10 @@ if __name__ == '__main__':
     player_count = client.player_count
     wealth_table = client.wealth_table
 
-    my_tuple=(100,[])
-
-    p_items={}  #tuple of wealth,list of paintings
-    for i in wealth_table:
-        p_items[i]=(wealth_table[i],[])
-
-    state ={"name":name,"iterator":0,"cur_item":auction_items[0],"allitems":auction_items,"k":artists_num,"n":required_count,"p_portfolio":p_items,"my_portfolio":my_tuple}
-
+    state=intialise_state(name,client)
     current_round = 0
     wealth = 100
     while True:
-        print("")
-        print("")
-        print("")
         printstate(state)
         if current_round == 0:
             bid_amt = calculate_bid(None, wealth, wealth_table,state)
@@ -101,12 +116,5 @@ if __name__ == '__main__':
             wealth -= game_state['winning_bid']
         check_game_status(game_state)
 
-        (p_w,p_l)=state["p_portfolio"][game_state['bid_winner']]
-        p_w=p_w-game_state['winning_bid']
-        p_l.append(state["allitems"][state["iterator"]])
-        state["p_portfolio"][game_state['bid_winner']]=(p_w,p_l)
-        state["curitem"]=state["allitems"][state["iterator"]]
-        if name==game_state['bid_winner']:
-            state["my_portfolio"]=(p_w,p_l)
-        state["iterator"]+=1
+        state=update_state(game_state,state)
         current_round += 1
