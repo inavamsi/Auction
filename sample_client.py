@@ -85,7 +85,7 @@ def get_kiwi_state(previous_state, game_state, previous_game_state):
 
 
 # TODO Put your bidding algorithm here
-def calculate_bid(game_state, wealth, wealth_table):
+def calculate_bid(game_state, wealth, wealth_table,state):
 
     # 'game_state': current game state
     # 'wealth': your current wealth
@@ -123,6 +123,7 @@ def initialize(name,client):
         p_items[i] = {}
         p_items[i]['wealth']=100
         p_items[i]['all_items']=[]
+        p_items[i]['win_bids']=[]
         for ele in artists:
             p_items[i][ele] = 0
 
@@ -157,6 +158,7 @@ def update_state(game_state,state):
     pstate = state["p_portfolio"][game_state['bid_winner']]
     pstate['wealth'] =pstate['wealth'] - game_state['winning_bid']
     pstate['all_items'].append(state["cur_item"])
+    pstate['win_bids'].append(game_state['winning_bid'])
     pstate[state['cur_item']]= pstate[state['cur_item']]+1
     state["p_portfolio"][game_state['bid_winner']] = pstate
 
@@ -192,9 +194,9 @@ if __name__ == '__main__':
     while True:
         printstate(kiwi_state)
         if current_round == 0:
-            bid_amt = calculate_bid(None, wealth, wealth_table)
+            bid_amt = calculate_bid(None, wealth, wealth_table,kiwi_state)
         else:
-            bid_amt = calculate_bid(game_state, wealth, game_state['wealth_table'])
+            bid_amt = calculate_bid(game_state, wealth, game_state['wealth_table'],kiwi_state)
         client.make_bid(auction_items[current_round], bid_amt)
 
         # after sending bid, wait for other player
