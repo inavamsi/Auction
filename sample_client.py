@@ -1,5 +1,8 @@
 import atexit
 import sys
+import random
+import copy
+import time
 
 from client import Client
 
@@ -60,29 +63,11 @@ def get_active_players(wealth_table):
             active_players.remove(key)
     return active_players, active_players.__len__()
 
-
-# Updates my_items
-def update_my_items(game_state, my_state):
-    if game_state['bid_winner'] == "kiwi_engine":
-        items_i_have = my_state['items_i_have']
-        items_i_have[game_state['bid_item']] += 1
-        my_state['items_i_have'] = items_i_have
-    return my_state
-
-
 def get_next_strategy(n, p):
     #TODO: Which strategy to use - it's an integer between 1-5 (eg. 1 for first turn, 2 for number of players=2,
     # 3 for number of players = 3, 4 for )
     next_strategy = 0
     return next_strategy
-
-
-
-def get_kiwi_state(previous_state, game_state, previous_game_state):
-    #TODO: Code to get current state from previous state and game_state
-    my_state = {}
-    return my_state
-
 
 # TODO Put your bidding algorithm here
 def calculate_bid(game_state, wealth, wealth_table,state):
@@ -92,26 +77,77 @@ def calculate_bid(game_state, wealth, wealth_table,state):
     # 'wealth_table': dictionary of wealth of each player like {'player_name': wealth, ...}
     #                 *Notice that player_name is a string. Invalid player will have wealth of -1.*
 
-    if game_state:
-        print("*********WEALTH TABLE********")
-        print(game_state['wealth_table'])
-        print("**********BID ITEM***********")
-        print(game_state['bid_item'])
+    #if game_state:
+     #   print("*********WEALTH TABLE********")
+     #   print(game_state['wealth_table'])
+     #   print("**********BID ITEM***********")
+     #   print(game_state['bid_item'])
 
     # my_bid =
+    if (state['strategy'] == 'all_out'):
+        bid = state['wealth']
+        return makebid(state, bid)
 
-    return 1
+    if(state['strategy']=='patience'):
+        bid = random.randint(1,2)
+        return makebid(state,bid)
 
+    if(state['strategy']=='block'):
+        if(state['p']==2):
+            opp=state['risk'][0]
+            bid=state['p_portfolio'][opp]['wealth']+1
+            return makebid(state,bid)
+        else:
+            maxbid=0
+            for opp in state['risk']:
+                maxbid = max(state['p_portfolio'][opp]['wealth']>maxbid)
+            time.sleep(2)
+            return makebid(state,maxbid+1)
+
+    return makebid(state,1)
+
+def makebid(state, bid):
+    return min(bid, state['my_wealth'])
+
+def left_to_win(state, a):
+    return state['items_i_have'][a]-state['n']
+
+def opp_winning(state):
+    winners=[]
+    for p in state['players']:
+        for a in state['artists']:
+            if state['p_portfolio'][p][a] == state['n']-1 and state['cur_item'] == a:
+                winners.append(p)
+
+    return winners
+
+def set_strategy(state):
+    for a in state['artists']:
+        if state['cur_item']==a and left_to_win(state,a)==1:
+            state['strategy']='all_out'
+            return state
+
+    if(state['iterator']<state['n']):
+        state['strategy']='patience'
+        return state
+
+    opp_winners=opp_winning(state)
+    if(opp_winners!=[]):
+        state['strategy']='block'
+        state['risk']=opp_winners
+        return state
+
+    return state
 
 def initialize(name,client):
     my_state = {}
 
     players = []
     artists = []
-    for i in range(0, player_count):
+    for i in range(0, client.player_count):
         players.append("p" + str(i))
 
-    for i in range(0, artists_num):
+    for i in range(0, client.artists_num):
         artists.append("t" + str(i))
 
     items_i_have = {}
@@ -127,6 +163,10 @@ def initialize(name,client):
         for ele in artists:
             p_items[i][ele] = 0
 
+    my_state['strategy']="patience"
+    my_state['risk']=[]
+    my_state['players']=players
+    my_state['artists']=artists
 
     my_state['iterator']=0
     my_state['items_i_have'] = items_i_have
@@ -138,6 +178,7 @@ def initialize(name,client):
     my_state["aucitems"]= client.auction_items
     my_state["k"]= client.artists_num
     my_state["n"]= client.required_count
+    my_state['p']=player_count
     my_state["p_portfolio"]= p_items
 
     return my_state
@@ -169,6 +210,7 @@ def update_state(game_state,state):
 
     state["cur_item"] = state["aucitems"][state["iterator"]]
 
+    state=set_strategy(state)
     return state
 
 if __name__ == '__main__':
