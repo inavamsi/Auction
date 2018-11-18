@@ -110,7 +110,7 @@ def makebid(state, bid):
     return min(bid, state['my_wealth'])
 
 def left_to_win(state, a):
-    return state['items_i_have'][a]-state['n']
+    return state['n'] - state['items_i_have'][a]
 
 def opp_winning(state):
     winners=[]
