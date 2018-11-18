@@ -55,6 +55,29 @@ def get_sorted_artists(auction_items, artists, n):
     return ordered_artists
 
 
+# Returns list of artists in the order of nth item appearance (basically whose items I can pick up the earliest at
+# every state)
+def get_sorted_artists_dynamic(state):
+    artists = state['artists']
+    ordered_artists = []
+    iterator = state['iterator']
+    remaining_auction_items = state["aucitems"][iterator:]
+    counter = dict.fromkeys(artists)
+    left_items_per_artist = {artist: left_to_win(state, artist) for artist in artists}
+    for item in remaining_auction_items:
+        if item in ordered_artists:
+            continue
+        else:
+            if counter[item]:
+                counter[item] += 1
+            else:
+                counter[item] = 1
+        if counter[item] >= left_items_per_artist[item]:
+            ordered_artists.append(item)
+    return ordered_artists
+
+
+
 # Returns players who still have wealth left
 def get_active_players(wealth_table):
     active_players = list(wealth_table.keys())
@@ -84,16 +107,16 @@ def calculate_bid(game_state, wealth, wealth_table,state):
      #   print(game_state['bid_item'])
 
     # my_bid =
-    if (state['strategy'] == 'all_out'):
+    if state['strategy'] == 'all_out':
         bid = state['wealth']
         return makebid(state, bid)
 
-    if(state['strategy']=='patience'):
+    if state['strategy'] == 'patience':
         bid = random.randint(1,2)
         return makebid(state,bid)
 
-    if(state['strategy']=='block'):
-        if(state['p']==2):
+    if state['strategy'] == 'block':
+        if state['p']==2:
             opp=state['risk'][0]
             bid=state['p_portfolio'][opp]['wealth']+1
             return makebid(state,bid)
@@ -104,13 +127,19 @@ def calculate_bid(game_state, wealth, wealth_table,state):
             time.sleep(2)
             return makebid(state,maxbid+1)
 
+    # if state['strategy'] == 'main_strategy':
+
+
     return makebid(state,1)
+
 
 def makebid(state, bid):
     return min(bid, state['my_wealth'])
 
+
 def left_to_win(state, a):
     return state['n'] - state['items_i_have'][a]
+
 
 def opp_winning(state):
     winners=[]
@@ -120,6 +149,7 @@ def opp_winning(state):
                 winners.append(p)
 
     return winners
+
 
 def set_strategy(state):
     for a in state['artists']:
@@ -139,6 +169,7 @@ def set_strategy(state):
 
     state['strategy']=None
     return state
+
 
 def initialize(name,client):
     my_state = {}
@@ -199,6 +230,7 @@ def printstate(state):
     for i in state["p_portfolio"]:
         print("     ",i," : ",state["p_portfolio"][i])
 
+
 def update_state(game_state,state):
     state['iterator'] += 1
     cur_artist=(int)(state['cur_item'][1])
@@ -220,6 +252,7 @@ def update_state(game_state,state):
 
     state=set_strategy(state)
     return state
+
 
 if __name__ == '__main__':
 
