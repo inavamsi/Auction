@@ -137,6 +137,7 @@ def set_strategy(state):
         state['risk']=opp_winners
         return state
 
+    state['strategy']=None
     return state
 
 def initialize(name,client):
@@ -144,8 +145,8 @@ def initialize(name,client):
 
     players = []
     artists = []
-    for i in range(0, client.player_count):
-        players.append("p" + str(i))
+    for i in client.wealth_table:
+        players.append(i)
 
     for i in range(0, client.artists_num):
         artists.append("t" + str(i))
@@ -163,6 +164,11 @@ def initialize(name,client):
         for ele in artists:
             p_items[i][ele] = 0
 
+    prev_win_bid={}
+    for a in artists:
+        prev_win_bid[a]=0
+
+    my_state['prev_win_bid']=prev_win_bid
     my_state['strategy']="patience"
     my_state['risk']=[]
     my_state['players']=players
@@ -202,6 +208,8 @@ def update_state(game_state,state):
     pstate['win_bids'].append(game_state['winning_bid'])
     pstate[state['cur_item']]= pstate[state['cur_item']]+1
     state["p_portfolio"][game_state['bid_winner']] = pstate
+
+    state['prev_win_bid'][state['aucitems'][state['iterator']-1]]+=1
 
 
     if state["name"] == game_state['bid_winner']:
