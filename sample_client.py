@@ -3,6 +3,7 @@ import sys
 import random
 import copy
 import time
+import math
 
 from client import Client
 
@@ -108,17 +109,21 @@ def calculate_bid(game_state, wealth, wealth_table,state):
 
     # my_bid =
     if state['strategy'] == 'all_out':
-        bid = state['wealth']
+        bid = state['my_wealth']
         return makebid(state, bid)
 
     if state['strategy'] == 'patience':
-        bid = random.randint(1,2)
+        bid = 1
+        return makebid(state,bid)
+
+    if state['strategy'] == 'first':
+        bid= random.randint(1,2)
         return makebid(state,bid)
 
     if state['strategy'] == 'block':
         if state['p']==2:
             opp=state['risk'][0]
-            bid=state['p_portfolio'][opp]['wealth']+1
+            bid=state['p_portfolio'][opp]['wealth']+0.1
             return makebid(state,bid)
         else:
             maxbid=0
@@ -127,6 +132,10 @@ def calculate_bid(game_state, wealth, wealth_table,state):
             time.sleep(2)
             return makebid(state,maxbid+1)
 
+    if state['strategy'] == 'greedy':
+        bid=state['i_wanna_bid'][state['cur_item']]
+        return makebid(state,bid)
+
     # if state['strategy'] == 'main_strategy':
 
 
@@ -134,7 +143,7 @@ def calculate_bid(game_state, wealth, wealth_table,state):
 
 
 def makebid(state, bid):
-    return min(bid, state['my_wealth'])
+    return math.ceil(max(0,min(bid, state['my_wealth'])))
 
 
 def left_to_win(state, a):
@@ -151,15 +160,132 @@ def opp_winning(state):
     return winners
 
 
+def want_2bid(state, a):
+    #my_bid_history  # my bid history for this artist
+    #won_artist_latest  # did i win the latest item of this artist
+    #my_prev_winbid  # my prev winning amt for this bid
+    #prev_winner_fora  # person who won this artist last
+    #prev_win_bid  # prev winning amt for this item
+    l=get_sorted_artists_dynamic(state)
+    ptarget=l[0]
+    starget=l[1]
+    prev_winner=state['prev_winner_fora'][a]
+    if(prev_winner==None):
+        prev_winner_short_of=state['n']
+        opp_avg_bid=100/state['n']
+    else:
+        prev_winner_short_of = state['n'] - state['p_portfolio'][prev_winner][a]
+        opp_avg_bid = (state['p_portfolio'][prev_winner]['wealth'] / prev_winner_short_of)
+
+    prev_winning_bid=state['prev_win_bid'][a]
+    my_bid_his_a=state['my_bid_history'][a]
+    me_short_of=left_to_win(state,a)
+    my_avg_bid=(state['my_wealth']/me_short_of)
+
+
+    if(prev_winner==state['name']):
+        if (ptarget == a):
+            ratio = (state['n'] + 1 - me_short_of) / state['n']
+            ratio = ratio * ratio / state['n']
+
+            maxbid=0
+            for p in state['players']:
+                pd=state['p_portfolio'][p]
+                if(state['n']-pd[a] < state['n']/2 and p!=state['name']):
+                    maxbid=(pd['wealth']/(state['n']-pd[a]))
+
+            c=0
+            d=0
+            if(maxbid<my_avg_bid):
+                c=maxbid+1
+
+            if (me_short_of == 2):
+                d = state['my_wealth'] / 3
+
+            state['i_wanna_bid'][a] = max(ratio * state['my_wealth'],c, d)
+
+        elif (starget == a):
+            ratio = (state['n'] + 1 - me_short_of) / state['n']
+            ratio = ratio * ratio / state['n']
+            c = 0
+            d = 0
+            if (me_short_of == 2):
+                d = state['my_wealth'] / 3
+
+            state['i_wanna_bid'][a] = 0.5 * max(ratio * state['my_wealth'], d)
+
+        else:
+            state['i_wanna_bid'][a] = 0
+            if (me_short_of == 2):
+                state['i_wanna_bid'][a] -=2
+                state['i_wanna_bid']=min(state['i_wanna_bid'],state['my_wealth']/6)
+            if (state['n'] > 30):
+                state['i_wanna_bid'][a] = 0.1
+
+
+    else:
+        if(ptarget==a):
+            ratio=(state['n']+1 -me_short_of)/state['n']
+            ratio=ratio*ratio/state['n']
+            c=0
+            d=0
+            if(prev_winner_short_of==2):
+                if(my_avg_bid>opp_avg_bid):
+                    c=opp_avg_bid+random.random()
+            if(me_short_of==2):
+                d=state['my_wealth']/3
+
+            maxbid = 0
+            for p in state['players']:
+                pd = state['p_portfolio'][p]
+                if (state['n'] - pd[a] < state['n'] / 2 and p!=state['name']):
+                    maxbid = (pd['wealth'] / (state['n'] - pd[a]))
+
+            e = 0
+            if (maxbid < my_avg_bid):
+                e = maxbid + 1
+
+            state['i_wanna_bid'][a]=max(ratio*state['my_wealth'],c,d,e)
+
+        elif (starget == a):
+            ratio = (state['n'] + 1 - me_short_of) / state['n']
+            ratio = ratio * ratio / state['n']
+            c=0
+            if (prev_winner_short_of == 2):
+                if (my_avg_bid > opp_avg_bid):
+                    c = opp_avg_bid + random.randomint(0, 1)
+            d=0
+            if (me_short_of == 2):
+                d = state['my_wealth'] / 3
+
+            state['i_wanna_bid'][a] = 0.5*max(ratio * state['my_wealth'], c, d)
+
+        else :
+            state['i_wanna_bid'][a]=0.1
+            if(me_short_of==2):
+                state['i_wanna_bid'][a]=state['my_wealth']/4
+            if(my_avg_bid>opp_avg_bid and prev_winner_short_of<3):
+                state['i_wanna_bid'][a]=opp_avg_bid-my_avg_bid
+            if(state['n']>30):
+                state['i_wanna_bid'][a] = 0
+
+    return state
+
 def set_strategy(state):
     for a in state['artists']:
         if state['cur_item']==a and left_to_win(state,a)==1:
             state['strategy']='all_out'
             return state
 
+    if(state['iterator']<10 and state['n']<20):
+        state['startegy']='first'
+        return state
+
     if(state['iterator']<state['n']):
         state['strategy']='patience'
         return state
+
+
 
     opp_winners=opp_winning(state)
     if(opp_winners!=[]):
@@ -167,7 +293,11 @@ def set_strategy(state):
         state['risk']=opp_winners
         return state
 
-    state['strategy']=None
+
+
+    state['strategy']='greedy'
+    for a in state['artists']:
+        state=want_2bid(state,a)
     return state
 
 
@@ -199,7 +329,35 @@ def initialize(name,client):
     for a in artists:
         prev_win_bid[a]=0
 
-    my_state['prev_win_bid']=prev_win_bid
+    prev_winner_fora={}
+    for a in artists:
+        prev_winner_fora[a]=None
+
+    my_bid_history={}
+    for a in artists:
+        my_bid_history[a]=[0]
+
+    won_artist_latest={}
+    for a in artists:
+        won_artist_latest[a]=False
+
+    i_wanna_bid={}
+    for a in artists:
+        i_wanna_bid[a]=0
+
+    my_prev_winbid={}
+    for a in artists:
+        my_prev_winbid[a]=0
+
+
+    my_state['my_bid_history']=my_bid_history               #my bid history for this artist
+    my_state['won_artist_latest'] = won_artist_latest          # did i win the latest item of this artist
+    my_state['my_prev_winbid'] = my_prev_winbid         #my prev winning amt for this bid
+    my_state['prev_winner_fora']=prev_winner_fora       #person who won this artist last
+    my_state['i_wanna_bid']=i_wanna_bid
+    my_state['prev_bid']=0
+
+    my_state['prev_win_bid']=prev_win_bid       #prev winning amt for this item
     my_state['strategy']="patience"
     my_state['risk']=[]
     my_state['players']=players
@@ -234,6 +392,7 @@ def printstate(state):
 def update_state(game_state,state):
     state['iterator'] += 1
     cur_artist=(int)(state['cur_item'][1])
+    prev_artist=state['aucitems'][state['iterator']-1]
     pstate = state["p_portfolio"][game_state['bid_winner']]
     pstate['wealth'] =pstate['wealth'] - game_state['winning_bid']
     pstate['all_items'].append(state["cur_item"])
@@ -241,7 +400,15 @@ def update_state(game_state,state):
     pstate[state['cur_item']]= pstate[state['cur_item']]+1
     state["p_portfolio"][game_state['bid_winner']] = pstate
 
-    state['prev_win_bid'][state['aucitems'][state['iterator']-1]]+=1
+    state['prev_win_bid'][prev_artist] = game_state['winning_bid']
+    state['my_bid_history'][prev_artist].append(state['prev_bid'])
+    state['won_artist_latest'][prev_artist]= (game_state['bid_winner'] == state['name'])
+    state['prev_winner_fora'][prev_artist]=game_state['bid_winner']
+    if(game_state['bid_winner'] == state['name']):
+        state['won_artist_latest'][prev_artist] = True
+        state['my_prev_winbid']['prev_artist'] = game_state['winning_bid']
+    else:
+        state['won_artist_latest'][prev_artist]=False
 
 
     if state["name"] == game_state['bid_winner']:
@@ -278,8 +445,10 @@ if __name__ == '__main__':
         printstate(kiwi_state)
         if current_round == 0:
             bid_amt = calculate_bid(None, wealth, wealth_table,kiwi_state)
+            kiwi_state['prev_bid']=bid_amt
         else:
             bid_amt = calculate_bid(game_state, wealth, game_state['wealth_table'],kiwi_state)
+            kiwi_state['prev_bid'] = bid_amt
         client.make_bid(auction_items[current_round], bid_amt)
 
         # after sending bid, wait for other player
